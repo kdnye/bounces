@@ -135,7 +135,14 @@ function sendDigestForColumn_(opts) {
     totalBounces++;
   }
 
-  if (totalBounces === 0) return;
+  if (totalBounces === 0) {
+    // Even with nothing to send, flag any internal-filtered rows so
+    // they aren't re-scanned forever.
+    if (indicesToUpdate.length > 0) {
+      markRowsAsSent_(opts.sheet, indicesToUpdate, opts.statusColumn, opts.timestampColumn);
+    }
+    return;
+  }
 
   const htmlBody = buildDigestHtml_(
     groupedBounces,
@@ -224,11 +231,24 @@ function collectExistingMessageIds_(sheet) {
 
 function markRowsAsSent_(sheet, rowIndices, statusCol, timestampCol) {
   if (!rowIndices.length) return;
-  const statusA1 = rowIndices.map(r => sheet.getRange(r, statusCol).getA1Notation());
-  const tsA1 = rowIndices.map(r => sheet.getRange(r, timestampCol).getA1Notation());
+  const statusLetter = columnLetter_(statusCol);
+  const tsLetter = columnLetter_(timestampCol);
+  const statusA1 = rowIndices.map(r => statusLetter + r);
+  const tsA1 = rowIndices.map(r => tsLetter + r);
   const now = new Date();
   sheet.getRangeList(statusA1).setValue("SENT");
   sheet.getRangeList(tsA1).setValue(now);
+}
+
+function columnLetter_(col) {
+  let letter = "";
+  let n = col;
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    letter = String.fromCharCode(65 + rem) + letter;
+    n = Math.floor((n - rem - 1) / 26);
+  }
+  return letter;
 }
 
 // -- Concurrency -- //
@@ -326,8 +346,11 @@ function escapeHtml_(value) {
 }
 
 function formatTimestamp_(ts) {
+  if (!ts) return "N/A";
+  const date = new Date(ts);
+  if (isNaN(date.getTime())) return "N/A";
   const tz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone() || "Etc/UTC";
-  return Utilities.formatDate(new Date(ts), tz, "MM/dd/yyyy HH:mm");
+  return Utilities.formatDate(date, tz, "MM/dd/yyyy HH:mm");
 }
 
 // -- Utility & Filtering Functions Below -- //
