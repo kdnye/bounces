@@ -7,11 +7,11 @@
 function setInitialConfig() {
   PropertiesService.getScriptProperties().setProperties({
     // --- Titan server (outbound mail) — used to FETCH bounces ---
-    "TITAN_API_TOKEN": "f92c7446-aea6-4cbb-bc59-b48e65686451",
+    "TITAN_API_TOKEN": "***placeholder***",
     "TITAN_MESSAGE_STREAM": "outbound",
 
     // --- Internal Tools server — used to SEND the bounce digest emails ---
-    "INTERNAL_TOOLS_API_TOKEN": "4ba716ef-a15e-4b71-8132-2c91e59a918d",
+    "INTERNAL_TOOLS_API_TOKEN": "***placeholder***",
     "DIGEST_MESSAGE_STREAM": "bounces",
 
     "FROM_EMAIL": "MailBounce@freightservices.net",
