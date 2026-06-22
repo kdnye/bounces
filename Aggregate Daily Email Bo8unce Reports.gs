@@ -23,12 +23,12 @@ function pullRecentBounces() {
     }
   }
 
-  // 2. Fetch the latest 50 bounces from Postmark
-  const url = `https://api.postmarkapp.com/bounces?count=50&offset=0&messagestream=${cfg.STREAM}`;
+  // 2. Fetch the latest 50 bounces from the Titan (outbound) server
+  const url = `https://api.postmarkapp.com/bounces?count=50&offset=0&messagestream=${cfg.TITAN_STREAM}`;
   const response = UrlFetchApp.fetch(url, {
     method: "get",
     headers: {
-      "X-Postmark-Server-Token": cfg.API_TOKEN,
+      "X-Postmark-Server-Token": cfg.TITAN_TOKEN,
       "Accept": "application/json"
     },
     muteHttpExceptions: true
@@ -197,11 +197,11 @@ function sendDailyBounceDigest() {
     </html>
   `;
 
-  // Send the email to the EXTERNAL_DIGEST_RECIPIENT
+  // Send the email via the Internal Tools server on the "bounces" stream
   UrlFetchApp.fetch("https://api.postmarkapp.com/email", {
     method: "post",
     headers: {
-      "X-Postmark-Server-Token": cfg.API_TOKEN,
+      "X-Postmark-Server-Token": cfg.INTERNAL_TOOLS_TOKEN,
       "Accept": "application/json",
       "Content-Type": "application/json"
     },
@@ -210,7 +210,7 @@ function sendDailyBounceDigest() {
       "To": cfg.EXTERNAL_DIGEST,
       "Subject": `FSI External Mail Bounce Summary: ${totalBounces} Failures Detected`,
       "HtmlBody": htmlBody,
-      "MessageStream": "outbound"
+      "MessageStream": cfg.DIGEST_STREAM
     })
   });
 
@@ -328,11 +328,11 @@ function sendInternalBounceReport() {
     </html>
   `;
 
-  // Send the email to the INTERNAL_DIGEST_RECIPIENT
+  // Send the email via the Internal Tools server on the "bounces" stream
   UrlFetchApp.fetch("https://api.postmarkapp.com/email", {
     method: "post",
     headers: {
-      "X-Postmark-Server-Token": cfg.API_TOKEN,
+      "X-Postmark-Server-Token": cfg.INTERNAL_TOOLS_TOKEN,
       "Accept": "application/json",
       "Content-Type": "application/json"
     },
@@ -341,7 +341,7 @@ function sendInternalBounceReport() {
       "To": cfg.INTERNAL_DIGEST,
       "Subject": `Internal Bounce Alert: ${totalBounces} Failures Detected`,
       "HtmlBody": htmlBody,
-      "MessageStream": "outbound"
+      "MessageStream": cfg.DIGEST_STREAM
     })
   });
 
